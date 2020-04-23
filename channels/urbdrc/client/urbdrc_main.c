@@ -314,6 +314,17 @@ static UINT urdbrc_send_usb_device_add(URBDRC_CHANNEL_CALLBACK* callback, IUDEVI
 
 	if (!out)
 		return ERROR_OUTOFMEMORY;
+#if 1
+    printf("%s InterfaceId=%x\n", __func__, InterfaceId);
+    printf("%s UsbDevice=%x\n", __func__, pdev->get_UsbDevice(pdev));
+    printf("%s HardwareIds[0]=%s\n", __func__, HardwareIds[0]);
+    printf("%s HardwareIds[1]=%s\n", __func__, HardwareIds[1]);
+    printf("%s CompatibilityIds[0]=%s\n", __func__, CompatibilityIds[0]);
+    printf("%s CompatibilityIds[1]=%s\n", __func__, CompatibilityIds[1]);
+    printf("%s CompatibilityIds[2]=%s\n", __func__, CompatibilityIds[2]);
+    printf("%s strContainerId=%s\n", __func__, strContainerId);
+    printf("%s strInstanceId=%s\n", __func__, strInstanceId);
+#endif
 
 	Stream_Write_UINT32(out, InterfaceId); /* interface */
 	Stream_Write_UINT32(out, 0);

@@ -330,6 +330,9 @@ static UINT urbdrc_process_internal_io_control(IUDEVICE* pdev, URBDRC_CHANNEL_CA
 	if (!out)
 		return ERROR_OUTOFMEMORY;
 
+#if 1
+	printf("%s frames=%d\n", __func__, frames);
+#endif
 	Stream_Write_UINT32(out, frames); /** OutputBuffer */
 	return stream_write_and_free(callback->plugin, callback->channel, out);
 }
@@ -1006,6 +1009,10 @@ static UINT urb_control_vendor_or_class_request(IUDEVICE* pdev, URBDRC_CHANNEL_C
 	           " OutputBufferSize: 0x%" PRIx32 " bmRequestType: 0x%" PRIx8,
 	           RequestId, TransferFlags, ReqTypeReservedBits, Request, Value, Index,
 	           OutputBufferSize, bmRequestType);
+#if 1
+	printf("%s RequestId:%x TransferFlags:%x ReqTypeReservedBits:%x Request:%x Value:%x Index:%x OutputBufferSize:%x bmRequestType:%x\n",
+	        __func__, RequestId, TransferFlags, ReqTypeReservedBits, Request, Value, Index, OutputBufferSize, bmRequestType);
+#endif
 
 	if (!pdev->control_transfer(pdev, RequestId, 0, 0, bmRequestType, Request, Value, Index,
 	                            &usbd_status, &OutputBufferSize, Stream_Pointer(out), 2000))

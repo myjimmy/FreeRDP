@@ -123,6 +123,34 @@ static void async_transfer_user_data_free(ASYNC_TRANSFER_USER_DATA* user_data)
 	}
 }
 
+#if 0
+#define DEFAULT_PATH "/home/ubuntu/Desktop/webcam/data/"
+#define FILE_PREFIX "webcam"
+#define FILE_EXTENSION "dat"
+
+static int g_Index = 0;
+void create_h264file(const BYTE* pSrcData, UINT32 SrcSize)
+{
+    if (pSrcData == NULL || SrcSize == 0)
+        return;
+
+    g_Index++;
+
+    char filename[64] = {0};
+    FILE* fp = NULL;
+
+    sprintf(filename, "%s/%s-%04d.%s", DEFAULT_PATH, FILE_PREFIX, g_Index, FILE_EXTENSION);
+    fp = fopen(filename, "w");
+    if (fp == NULL) {
+        printf("The file '%s' was not opened.\n", filename);
+        return;
+    }
+
+    fwrite(pSrcData, 1, SrcSize, fp);
+    fclose(fp);
+}
+#endif
+
 static void func_iso_callback(struct libusb_transfer* transfer)
 {
 	ASYNC_TRANSFER_USER_DATA* user_data = (ASYNC_TRANSFER_USER_DATA*)transfer->user_data;
@@ -158,8 +186,13 @@ static void func_iso_callback(struct libusb_transfer* transfer)
 					    libusb_get_iso_packet_buffer_simple(transfer, i);
 					BYTE* data = dataStart + index;
 
-					if (data != packetBuffer)
-						memmove(data, packetBuffer, act_len);
+					if (data != packetBuffer) {
+#if 0
+					    if (act_len > 0)
+                            create_h264file(packetBuffer, act_len);
+#endif
+                        memmove(data, packetBuffer, act_len);
+                    }
 
 					index += act_len;
 				}
@@ -809,7 +842,23 @@ static int libusb_udev_os_feature_descriptor_request(IUDEVICE* idev, UINT32 Requ
 	                                LIBUSB_REQUEST_GET_DESCRIPTOR, 0x03ee, 0, ms_string_desc, 0x12,
 	                                Timeout);
 
-	// WLog_Print(urbdrc->log, WLOG_ERROR,  "Get ms string: result number %d", error);
+#if 1
+    if (error > 0) {
+        printf("ms_string_desc[%d] = { ", error);
+        for (int i = 0; i < error; i++) {
+            if (i < error - 1)
+                printf("0x%02x, ", ms_string_desc[i]);
+            else
+                printf("0x%02x ", ms_string_desc[i]);
+        }
+        printf("}\n");
+    }
+    else {
+        printf("error=%d, ms_string_desc[0x13]={0}\n", error);
+    }
+#endif
+
+    // WLog_Print(urbdrc->log, WLOG_ERROR,  "Get ms string: result number %d", error);
 	if (error > 0)
 	{
 		const BYTE bMS_Vendorcode = ms_string_desc[16];
@@ -820,9 +869,28 @@ static int libusb_udev_os_feature_descriptor_request(IUDEVICE* idev, UINT32 Requ
 		                                bMS_Vendorcode, (InterfaceNumber << 8) | Ms_PageIndex,
 		                                Ms_featureDescIndex, Buffer, *BufferSize, Timeout);
 		*BufferSize = error;
-	}
 
-	if (error < 0)
+#if 1
+        if (error > 0) {
+            printf("Recipient=0x%02x, bMS_Vendorcode=0x%02x, InterfaceNumber=0x%02x, Ms_PageIndex=0x%02x, Ms_featureDescIndex=0x%04x, BufferSize=%d, error=%d, Timeout=%d\n",
+                   Recipient, bMS_Vendorcode, InterfaceNumber, Ms_PageIndex, Ms_featureDescIndex, *BufferSize, error, Timeout);
+
+            printf("Buffer[%d] = { ", error);
+            for (int i = 0; i < error; i++) {
+                if (i < error - 1)
+                    printf("0x%02x, ", Buffer[i]);
+                else
+                    printf("0x%02x ", Buffer[i]);
+            }
+            printf("}\n");
+        }
+        else {
+            printf("error=%d, Buffer[%d]={0}\n", error, *BufferSize);
+        }
+#endif
+    }
+
+    if (error < 0)
 		*UsbdStatus = USBD_STATUS_STALL_PID;
 	else
 		*UsbdStatus = USBD_STATUS_SUCCESS;
@@ -1129,6 +1197,21 @@ static BOOL libusb_udev_control_transfer(IUDEVICE* idev, UINT32 RequestId, UINT3
 
 	status = libusb_control_transfer(pdev->libusb_handle, bmRequestType, Request, Value, Index,
 	                                 Buffer, *BufferSize, Timeout);
+
+#if 1
+	if (status > 0) {
+        printf("bmRequestType=0x%02x, Request=0x%02x, Value=0x%04x, Index=0x%04x, BufferSize=%d, status=%d, Timeout=%d\n",
+               bmRequestType, Request, Value, Index, *BufferSize, status, Timeout);
+        printf("Buffer[%d] = { ", status);
+        for (int i = 0; i < status; i++) {
+            if (i < status - 1)
+                printf("0x%02x, ", Buffer[i]);
+            else
+                printf("0x%02x ", Buffer[i]);
+        }
+        printf("}\n");
+    }
+#endif
 
 	if (status >= 0)
 		*BufferSize = (UINT32)status;
