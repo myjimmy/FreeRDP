@@ -921,6 +921,22 @@ static int libusb_udev_os_feature_descriptor_request(IUDEVICE* idev, UINT32 Requ
 
 	log_libusb_result(pdev->urbdrc->log, WLOG_DEBUG, "libusb_control_transfer", error);
 
+#if 1
+    if (error > 0) {
+        printf("ms_string_desc[%d] = { ", error);
+        for (int i = 0; i < error; i++) {
+            if (i < error - 1)
+                printf("0x%02x, ", ms_string_desc[i]);
+            else
+                printf("0x%02x ", ms_string_desc[i]);
+        }
+        printf("}\n");
+    }
+    else {
+        printf("libusb_control_transfer error_no=%d, error_text=%s, error_desc=%s, ms_string_desc[0x13]={0}\n", error, libusb_error_name(error), libusb_strerror(error));
+    }
+#endif
+
 	if (error > 0)
 	{
 		const BYTE bMS_Vendorcode = ms_string_desc[16];
@@ -933,6 +949,26 @@ static int libusb_udev_os_feature_descriptor_request(IUDEVICE* idev, UINT32 Requ
 
 		if (error >= 0)
 			*BufferSize = error;
+
+#if 1
+        if (error > 0) {
+            printf("Recipient=0x%02x, bMS_Vendorcode=0x%02x, InterfaceNumber=0x%02x, Ms_PageIndex=0x%02x, Ms_featureDescIndex=0x%04x, BufferSize=%d, error=%d, Timeout=%d\n",
+                   Recipient, bMS_Vendorcode, InterfaceNumber, Ms_PageIndex, Ms_featureDescIndex, *BufferSize, error, Timeout);
+
+            printf("Buffer[%d] = { ", error);
+            for (int i = 0; i < error; i++) {
+                if (i < error - 1)
+                    printf("0x%02x, ", Buffer[i]);
+                else
+                    printf("0x%02x ", Buffer[i]);
+            }
+            printf("}\n");
+        }
+        else {
+            printf("error=%d, Buffer[%d]={0}\n", error, *BufferSize);
+        }
+#endif
+
 	}
 
 	if (error < 0)
@@ -1255,6 +1291,21 @@ static BOOL libusb_udev_control_transfer(IUDEVICE* idev, UINT32 RequestId, UINT3
 
 	status = libusb_control_transfer(pdev->libusb_handle, bmRequestType, Request, Value, Index,
 	                                 Buffer, *BufferSize, Timeout);
+
+#if 1
+    if (status > 0) {
+        printf("bmRequestType=0x%02x, Request=0x%02x, Value=0x%04x, Index=0x%04x, BufferSize=%d, status=%d, Timeout=%d\n",
+               bmRequestType, Request, Value, Index, *BufferSize, status, Timeout);
+        printf("Buffer[%d] = { ", status);
+        for (int i = 0; i < status; i++) {
+            if (i < status - 1)
+                printf("0x%02x, ", Buffer[i]);
+            else
+                printf("0x%02x ", Buffer[i]);
+        }
+        printf("}\n");
+    }
+#endif
 
 	if (status >= 0)
 		*BufferSize = (UINT32)status;
