@@ -1728,6 +1728,64 @@ static IUDEVICE* udev_init(URBDRC_PLUGIN* urbdrc, libusb_context* context, LIBUS
 	if (status < 0)
 		goto fail;
 
+#if 1
+    const struct libusb_interface *interface0;
+    const struct libusb_interface *interface1;
+
+    interface0 = &pdev->LibusbConfig->interface[0];
+    interface1 = &pdev->LibusbConfig->interface[1];
+
+    printf("config->extra[%d]={ ", pdev->LibusbConfig->extra_length);
+    for (int i = 0; i < pdev->LibusbConfig->extra_length; i++) {
+        if (i != pdev->LibusbConfig->extra_length - 1)
+            printf("%02x, ", pdev->LibusbConfig->extra[i]);
+        else
+            printf("%02x }\n", pdev->LibusbConfig->extra[i]);
+    }
+
+    printf("interface[0]->altsetting->extra[%d]={ ", interface0->altsetting->extra_length);
+    for (int i = 0; i < interface0->altsetting->extra_length; i++) {
+        if (i != interface0->altsetting->extra_length - 1)
+            printf("%02x, ", interface0->altsetting->extra[i]);
+        else
+            printf("%02x }\n", interface0->altsetting->extra[i]);
+    }
+
+    printf("interface[0]->altsetting->endpoint->extra[%d]={ ", interface0->altsetting->endpoint->extra_length);
+    for (int i = 0; i < interface0->altsetting->endpoint->extra_length; i++) {
+        if (i != interface0->altsetting->endpoint->extra_length - 1)
+            printf("%02x, ", interface0->altsetting->endpoint->extra[i]);
+        else
+            printf("%02x }\n", interface0->altsetting->endpoint->extra[i]);
+    }
+
+    const struct libusb_interface_descriptor *altsetting0;
+    const struct libusb_interface_descriptor *altsetting1;
+
+    altsetting0 = &interface1->altsetting[0];
+    altsetting1 = &interface1->altsetting[1];
+
+    printf("interface[1]->altsetting[0]->extra[%d]={ ", altsetting0->extra_length);
+    for (int i = 0; i < altsetting0->extra_length; i++) {
+        if (i != altsetting0->extra_length - 1)
+            printf("%02x, ", altsetting0->extra[i]);
+        else
+            printf("%02x }\n", altsetting0->extra[i]);
+    }
+
+    printf("interface[1]->altsetting[1]->extra[%d]={ ", altsetting1->extra_length);
+    for (int i = 0; i < altsetting1->extra_length; i++) {
+        if (i != altsetting1->extra_length - 1)
+            printf("%02x, ", altsetting1->extra[i]);
+        else
+            printf("%02x }\n", altsetting1->extra[i]);
+    }
+
+    if (altsetting1->extra_length == 0) {
+        printf("%\n");
+    }
+#endif
+
 	config_temp = pdev->LibusbConfig;
 	/* get the first interface and first altsetting */
 	interface_temp = config_temp->interface[0].altsetting[0];
