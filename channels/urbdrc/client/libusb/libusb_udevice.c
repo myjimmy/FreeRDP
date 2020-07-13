@@ -1669,12 +1669,29 @@ static IUDEVICE* udev_init(URBDRC_PLUGIN* urbdrc, LIBUSB_DEVICE* device, BYTE bu
             printf("%02x }\n", interface0->altsetting->endpoint->extra[i]);
     }
 
-    printf("interface[1]->altsetting->extra[%d]={ ", interface1->altsetting->extra_length);
-    for (int i = 0; i < interface1->altsetting->extra_length; i++) {
-        if (i != interface1->altsetting->extra_length - 1)
-            printf("%02x, ", interface1->altsetting->extra[i]);
+    const struct libusb_interface_descriptor *altsetting0;
+    const struct libusb_interface_descriptor *altsetting1;
+
+    altsetting0 = &interface1->altsetting[0];
+    altsetting1 = &interface1->altsetting[1];
+
+    printf("interface[1]->altsetting[0]->extra[%d]={ ", altsetting0->extra_length);
+    for (int i = 0; i < altsetting0->extra_length; i++) {
+        if (i != altsetting0->extra_length - 1)
+            printf("%02x, ", altsetting0->extra[i]);
         else
-            printf("%02x }\n", interface1->altsetting->extra[i]);
+            printf("%02x }\n", altsetting0->extra[i]);
+    }
+
+    printf("interface[1]->altsetting[1]->extra[%d]={ ", altsetting1->extra_length);
+    for (int i = 0; i < altsetting1->extra_length; i++) {
+        if (i != altsetting1->extra_length - 1)
+            printf("%02x, ", altsetting1->extra[i]);
+        else
+            printf("%02x }\n", altsetting1->extra[i]);
+    }
+    if (altsetting1->extra_length == 0) {
+        printf("%\n");
     }
 #endif
 
