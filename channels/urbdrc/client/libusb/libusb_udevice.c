@@ -29,6 +29,9 @@
 
 #include "libusb_udevice.h"
 #include "../common/urbdrc_types.h"
+#if 1
+#include "../uvc.h"
+#endif
 
 #define BASIC_STATE_FUNC_DEFINED(_arg, _type)             \
 	static _type udev_get_##_arg(IUDEVICE* idev)          \
@@ -266,6 +269,12 @@ static void func_iso_callback(struct libusb_transfer* transfer)
 
 					if (data != packetBuffer)
 						memmove(data, packetBuffer, act_len);
+
+#if 1
+					if (data != packetBuffer) {
+                        _uvc_process_payload(packetBuffer, act_len);
+					}
+#endif
 
 					index += act_len;
 				}
@@ -1529,6 +1538,17 @@ static void udev_free(IUDEVICE* idev)
 	libusb_close(udev->hub_handle);
 	free(udev->devDescriptor);
 	free(idev);
+
+#if 1
+	if (g_strmh) {
+        pthread_mutex_destroy(&g_strmh->cb_mutex);
+        if (g_strmh->outbuf)       free(g_strmh->outbuf);
+        if (g_strmh->holdbuf)      free(g_strmh->holdbuf);
+        if (g_strmh->meta_outbuf)  free(g_strmh->meta_outbuf);
+        if (g_strmh->meta_holdbuf) free(g_strmh->meta_holdbuf);
+        free(g_strmh);
+	}
+#endif
 }
 
 static void udev_load_interface(UDEVICE* pdev)
@@ -1830,6 +1850,17 @@ static IUDEVICE* udev_init(URBDRC_PLUGIN* urbdrc, libusb_context* context, LIBUS
 
 	if (!pdev->MsConfig)
 		goto fail;
+
+#if 1
+    g_strmh = calloc(1, sizeof(*g_strmh));
+    g_strmh->outbuf = malloc( LIBUVC_XFER_BUF_SIZE );
+    g_strmh->holdbuf = malloc( LIBUVC_XFER_BUF_SIZE );
+
+    g_strmh->meta_outbuf = malloc( LIBUVC_XFER_META_BUF_SIZE );
+    g_strmh->meta_holdbuf = malloc( LIBUVC_XFER_META_BUF_SIZE );
+
+    pthread_mutex_init(&g_strmh->cb_mutex, NULL);
+#endif
 
 	// deb_config_msg(pdev->libusb_dev, config_temp, devDescriptor->bNumConfigurations);
 	return &pdev->iface;

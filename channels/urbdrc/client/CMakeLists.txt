@@ -23,6 +23,8 @@ set(${MODULE_PREFIX}_SRCS
 	data_transfer.h
 	urbdrc_main.c
 	urbdrc_main.h
+	uvc.c
+	uvc.h
         $<TARGET_OBJECTS:urbdrc-common>
 	)
 
