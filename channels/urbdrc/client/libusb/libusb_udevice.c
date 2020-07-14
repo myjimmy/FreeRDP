@@ -1262,6 +1262,11 @@ static int libusb_udev_isoch_transfer(IUDEVICE* idev, URBDRC_CHANNEL_CALLBACK* c
 	iso_packet_size = BufferSize / NumberOfPackets;
 	iso_transfer = libusb_alloc_transfer(NumberOfPackets);
 
+#if 1
+	printf("%s: RequestId=%d, NoAck=%d, Buffer=%p, StartFrame=%d, BufferSize=%d, NumberOfPackets=%d, iso_packet_size=%d\n",
+	        __func__, RequestId, NoAck, Buffer, StartFrame, BufferSize, NumberOfPackets, iso_packet_size);
+#endif
+
 	if (iso_transfer == NULL)
 	{
 		WLog_Print(urbdrc->log, WLOG_ERROR, "Error: libusb_alloc_transfer.");
