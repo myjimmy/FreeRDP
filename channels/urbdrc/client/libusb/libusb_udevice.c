@@ -270,7 +270,7 @@ static void func_iso_callback(struct libusb_transfer* transfer)
 					if (data != packetBuffer)
 						memmove(data, packetBuffer, act_len);
 
-#if 1
+#if 0
 					if (data != packetBuffer) {
                         _uvc_process_payload(packetBuffer, act_len);
 					}
