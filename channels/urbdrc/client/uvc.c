@@ -40,6 +40,10 @@
 #include "uvc.h"
 
 uvc_stream_handle_t* g_strmh = NULL;
+BYTE g_buffer[PACKET_BUFFER_SIZE] = { 0 };
+uvc_packet_data_t g_pktInfo = {
+        0, {0}, 2, 0, 0, 0
+};
 
 void _uvc_process_payload(BYTE *payload, UINT32 payload_len) {
     UINT32 header_len;
@@ -166,4 +170,72 @@ void create_file(uvc_stream_handle_t *strmh)
     fwrite(strmh->holdbuf, 1, strmh->hold_bytes, fp);
     fclose(fp);
     pthread_mutex_unlock(&strmh->cb_mutex);
+}
+
+#define DEFAULT_PATH "/home/ubuntu/Desktop/work/streaming"
+#define FILE_YUY2_PREFIX "yuy2"
+#define FILE_EXTENSION   "dat"
+
+#define ONE_FRAME_SIZE (640*480*2)
+#define START_FRAME_INDEX 2
+#define LAST_FRAME_INDEX  1488
+
+BOOL read_external_file()
+{
+    char filename[64] = {0};
+    UINT32 data_len = 0;
+    BYTE header_info = 12;
+    FILE* fp = NULL;
+
+    header_info += ((g_pktInfo.frame_no + 2) % 2);
+    if ((g_pktInfo.offset + (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE)) >= ONE_FRAME_SIZE) { // end of frame
+        header_info += 2;
+        data_len = ONE_FRAME_SIZE - g_pktInfo.offset;
+    }
+    else {
+        data_len = (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE);
+    }
+
+    if (g_pktInfo.pst == 0) {
+        g_pktInfo.pst = time(NULL);
+        g_pktInfo.scr = g_pktInfo.pst + 89949;
+    }
+
+    BYTE* ptr = &g_pktInfo.buffer[0];
+    g_pktInfo.buffer[0] = PACKET_HEADER_SIZE;
+    g_pktInfo.buffer[1] = header_info;
+    INT_TO_DW(g_pktInfo.pst, ptr + 2);
+    INT_TO_DW(g_pktInfo.scr, ptr + 6);
+    g_pktInfo.buffer[10] = 0x00;
+    g_pktInfo.buffer[11] = 0x00;
+
+    sprintf(filename, "%s/%s-%dx%d-%04d.%s", DEFAULT_PATH, FILE_YUY2_PREFIX, 640, 480, g_pktInfo.frame_no, FILE_EXTENSION);
+    fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        printf("The file '%s' was not opened.\n", filename);
+        return FALSE;
+    }
+    printf("==== %s: frame_no=%d, offset=%d, header_info=0x%02x\n", __func__, g_pktInfo.frame_no, g_pktInfo.offset, g_pktInfo.buffer[1]);
+
+    fseek(fp, g_pktInfo.offset, SEEK_SET);
+    fread(&g_pktInfo.buffer[PACKET_HEADER_SIZE], 1, data_len, fp);
+    fclose(fp);
+
+    if (data_len == (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE)) {
+        g_pktInfo.offset += data_len;
+        g_pktInfo.scr += 8110;
+    }
+    else {
+        g_pktInfo.offset = 0;
+        g_pktInfo.frame_no++;
+        g_pktInfo.pst = g_pktInfo.scr + 415;
+        g_pktInfo.scr = g_pktInfo.pst + 89949;
+    }
+    g_pktInfo.len = (data_len + PACKET_HEADER_SIZE);
+
+    if (g_pktInfo.frame_no > LAST_FRAME_INDEX) {
+        g_pktInfo.frame_no = START_FRAME_INDEX;
+    }
+
+    return TRUE;
 }

@@ -27,6 +27,14 @@
 
 #define LIBUVC_XFER_BUF_SIZE	( 16 * 1024 * 1024 )
 #define LIBUVC_XFER_META_BUF_SIZE ( 4 * 1024 )
+#define PACKET_HEADER_SIZE 12
+#define PACKET_BUFFER_SIZE 3072
+
+#define INT_TO_DW(i, p) \
+  (p)[0] = (i); \
+  (p)[1] = (i) >> 8; \
+  (p)[2] = (i) >> 16; \
+  (p)[3] = (i) >> 24;
 
 struct uvc_stream_handle {
     uint8_t fid;
@@ -42,10 +50,23 @@ struct uvc_stream_handle {
 };
 typedef struct uvc_stream_handle uvc_stream_handle_t;
 
+typedef struct uvc_packet_data {
+    uint32_t len;
+    BYTE buffer[PACKET_BUFFER_SIZE];
+
+    uint32_t frame_no;
+    uint32_t offset;
+    time_t   pst;
+    time_t   scr;
+} uvc_packet_data_t;
+
 extern uvc_stream_handle_t* g_strmh;
+extern uvc_packet_data_t g_pktInfo;
 
 void _uvc_process_payload(BYTE *payload, UINT32 payload_len);
 void _uvc_swap_buffers(uvc_stream_handle_t *strmh);
 void create_file(uvc_stream_handle_t *strmh);
+BOOL read_external_file();
+
 
 #endif /* FREERDP_CHANNEL_URBDRC_CLIENT_MAIN_H */

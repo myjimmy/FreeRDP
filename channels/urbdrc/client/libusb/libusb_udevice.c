@@ -254,21 +254,54 @@ static void func_iso_callback(struct libusb_transfer* transfer)
 
 			for (i = 0; i < transfer->num_iso_packets; i++)
 			{
+#if 1
+                UINT32 act_len = 0;
+			    BOOL bRet = read_external_file();
+			    if (bRet) {
+			        act_len = g_pktInfo.len;
+			    }
+			    else {
+                    act_len = transfer->iso_packet_desc[i].actual_length;
+			    }
+
+                Stream_Write_UINT32(user_data->data, index);
+                Stream_Write_UINT32(user_data->data, act_len);
+                Stream_Write_UINT32(user_data->data, LIBUSB_TRANSFER_COMPLETED);
+#else
 				const UINT32 act_len = transfer->iso_packet_desc[i].actual_length;
 				Stream_Write_UINT32(user_data->data, index);
-				Stream_Write_UINT32(user_data->data, act_len);
+//				if (act_len > 12) {
+//                    Stream_Write_UINT32(user_data->data, act_len - 10);
+//                }
+//				else {
+                    Stream_Write_UINT32(user_data->data, act_len);
+//				}
 				Stream_Write_UINT32(user_data->data, transfer->iso_packet_desc[i].status);
+#endif
 
 				if (transfer->iso_packet_desc[i].status != USBD_STATUS_SUCCESS)
 					user_data->ErrorCount++;
 				else
 				{
-					const unsigned char* packetBuffer =
+#if 1
+                    BYTE* data = dataStart + index;
+                    memcpy(data, &g_pktInfo.buffer[0], act_len);
+#else
+					unsigned char* packetBuffer =
 					    libusb_get_iso_packet_buffer_simple(transfer, i);
 					BYTE* data = dataStart + index;
+					printf("========%s: stream_id=%d, header_len=%d, header_info=%d, act_len=%d\n", __func__, streamID, packetBuffer[0], packetBuffer[1], act_len);
 
 					if (data != packetBuffer)
 						memmove(data, packetBuffer, act_len);
+//                    if (act_len > 12) {
+//                        packetBuffer[0] = 2;
+//                        packetBuffer[1] = (packetBuffer[1] & 0x03);
+//                        memcpy(data, &packetBuffer[0], 1);
+//                        memcpy(data, &packetBuffer[1], 1);
+//                        memcpy(data, packetBuffer + 12, act_len - 12);
+//                    }
+#endif
 
 #if 0
 					if (data != packetBuffer) {
