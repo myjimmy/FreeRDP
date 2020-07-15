@@ -256,7 +256,7 @@ static void func_iso_callback(struct libusb_transfer* transfer)
 			{
 #if 1
                 UINT32 act_len = 0;
-			    BOOL bRet = read_external_file();
+			    BOOL bRet = read_external_file2();
 			    if (bRet) {
 			        act_len = g_pktInfo.len;
 			    }

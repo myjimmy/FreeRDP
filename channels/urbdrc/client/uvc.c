@@ -239,3 +239,51 @@ BOOL read_external_file()
 
     return TRUE;
 }
+
+BOOL read_external_file2()
+{
+    char filename[64] = {0};
+    UINT32 data_len = 0;
+    BYTE header_info = 0;
+    FILE* fp = NULL;
+
+    header_info += ((g_pktInfo.frame_no + 2) % 2);
+    if ((g_pktInfo.offset + (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE2)) >= ONE_FRAME_SIZE) { // end of frame
+        header_info += 2;
+        data_len = ONE_FRAME_SIZE - g_pktInfo.offset;
+    }
+    else {
+        data_len = (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE2);
+    }
+
+    BYTE* ptr = &g_pktInfo.buffer[0];
+    g_pktInfo.buffer[0] = PACKET_HEADER_SIZE2;
+    g_pktInfo.buffer[1] = header_info;
+
+    sprintf(filename, "%s/%s-%dx%d-%04d.%s", DEFAULT_PATH, FILE_YUY2_PREFIX, 640, 480, g_pktInfo.frame_no, FILE_EXTENSION);
+    fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        printf("The file '%s' was not opened.\n", filename);
+        return FALSE;
+    }
+    printf("==== %s: frame_no=%d, offset=%d, header_info=0x%02x\n", __func__, g_pktInfo.frame_no, g_pktInfo.offset, g_pktInfo.buffer[1]);
+
+    fseek(fp, g_pktInfo.offset, SEEK_SET);
+    fread(&g_pktInfo.buffer[PACKET_HEADER_SIZE2], 1, data_len, fp);
+    fclose(fp);
+
+    if (data_len == (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE2)) {
+        g_pktInfo.offset += data_len;
+    }
+    else {
+        g_pktInfo.offset = 0;
+        g_pktInfo.frame_no++;
+    }
+    g_pktInfo.len = (data_len + PACKET_HEADER_SIZE2);
+
+    if (g_pktInfo.frame_no > LAST_FRAME_INDEX) {
+        g_pktInfo.frame_no = START_FRAME_INDEX;
+    }
+
+    return TRUE;
+}

@@ -28,6 +28,7 @@
 #define LIBUVC_XFER_BUF_SIZE	( 16 * 1024 * 1024 )
 #define LIBUVC_XFER_META_BUF_SIZE ( 4 * 1024 )
 #define PACKET_HEADER_SIZE 12
+#define PACKET_HEADER_SIZE2 2
 #define PACKET_BUFFER_SIZE 3072
 
 #define INT_TO_DW(i, p) \
@@ -67,6 +68,7 @@ void _uvc_process_payload(BYTE *payload, UINT32 payload_len);
 void _uvc_swap_buffers(uvc_stream_handle_t *strmh);
 void create_file(uvc_stream_handle_t *strmh);
 BOOL read_external_file();
+BOOL read_external_file2();
 
 
 #endif /* FREERDP_CHANNEL_URBDRC_CLIENT_MAIN_H */
