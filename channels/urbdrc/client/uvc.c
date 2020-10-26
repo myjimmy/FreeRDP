@@ -184,12 +184,12 @@ BOOL read_external_file()
 {
     char filename[64] = {0};
     UINT32 data_len = 0;
-    BYTE header_info = 12;
+    BYTE header_info = 12; // default value of bmHeaderInfo
     FILE* fp = NULL;
 
-    header_info += ((g_pktInfo.frame_no + 2) % 2);
+    header_info += ((g_pktInfo.frame_no + 2) % 2); // set D0(Frame ID) of bmHeaderInfo
     if ((g_pktInfo.offset + (PACKET_BUFFER_SIZE - PACKET_HEADER_SIZE)) >= ONE_FRAME_SIZE) { // end of frame
-        header_info += 2;
+        header_info += 2; // set D1(End of Frame) of bmHeaderInfo
         data_len = ONE_FRAME_SIZE - g_pktInfo.offset;
     }
     else {
